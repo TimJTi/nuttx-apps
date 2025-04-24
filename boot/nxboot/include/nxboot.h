@@ -35,6 +35,14 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
+  #define nxboot_report(E_LVL, ...) syslog(E_LVL, ##__VA_ARGS__)
+#elif defined(CONFIG_NXBOOT_ERROR_STDERR)
+  #define nxboot_report(E_LVL, ...) fprintf(stderr, "E_LVL: ##__VA_ARGS__")
+#else
+  #define nxboot_report(E_LVL, ...) 
+#endif
+
 #define NXBOOT_PRIMARY_SLOT_NUM   (0)
 #define NXBOOT_SECONDARY_SLOT_NUM (1)
 #define NXBOOT_TERTIARY_SLOT_NUM  (2)

@@ -52,6 +52,22 @@ config NXBOOT_PLATFORM_IDENTIFIER
 		(or even a firmware uploaded via a programmer) is rejected if the
 		value in image's header doesn't match this option.
 
+choice
+    prompt "NXboot error reporting"
+    default NXBOOT_ERROR_SYSLOG
+
+config NXBOOT_ERROR_SYSLOG
+    bool "Error messages sent to syslog"
+    depends on SYSLOG
+
+config NXBOOT_ERROR_STDERR
+    bool "Error messages sent to stderr"
+
+config NXBOOT_ERROR_NONE
+    bool "No error message output"
+
+endchoice
+
 config NXBOOT_BOOTLOADER
 	bool "Build nxboot bootloader application"
 	default n

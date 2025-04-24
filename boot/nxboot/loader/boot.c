@@ -337,6 +337,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
       if (state->recovery_valid)
         {
           syslog(LOG_INFO, "Reverting image to recovery.\n");
+          nxboot_report(LOG_INFO, "Reverting image to recovery.\n");
           copy_partition(recovery, primary, state, false);
         }
     }
@@ -368,14 +369,17 @@ static int perform_update(struct nxboot_state *state, bool check_only)
            */
 
           syslog(LOG_INFO, "Creating recovery image.\n");
+          nxboot_report(LOG_INFO, "Creating recovery image.\n");
           copy_partition(primary, recovery, state, false);
           if (!validate_image(recovery))
             {
               syslog(LOG_INFO, "New recovery is not valid, stop update.\n");
+              nxboot_report(LOG_INFO, "New recovery is not valid, stop update.\n");
               goto perform_update_done;
             }
 
           syslog(LOG_INFO, "Recovery image created.\n");
+          nxboot_report(LOG_INFO, "Recovery image created.\n");
         }
 
       if (validate_image(update))
@@ -383,6 +387,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
           /* Perform update only if update slot contains valid image. */
 
           syslog(LOG_INFO, "Updating from update image.\n");
+          nxboot_report(LOG_INFO, "Updating from update image.\n");
           if (copy_partition(update, primary, state, true) >= 0)
             {
               /* Erase the first sector of update partition. This marks the
@@ -799,6 +804,7 @@ int nxboot_perform_update(bool check_only)
            */
 
           syslog(LOG_ERR, "Update process failed: %s\n", strerror(errno));
+          nxboot_report(LOG_ERR, "Update process failed: %s\n", strerror(errno));
         }
     }
 
