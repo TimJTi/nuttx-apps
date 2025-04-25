@@ -25,10 +25,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
 #include <stdio.h>
-#include <syslog.h>
-
 #include <nxboot.h>
 #include <sys/boardctl.h>
 
@@ -89,7 +86,6 @@ int main(int argc, FAR char *argv[])
 #endif
 #endif
 
-  syslog(LOG_INFO, "*** nxboot ***\n");
   nxboot_report(LOG_NOTICE, "*** nxboot ***\n");
 
 #ifdef CONFIG_NXBOOT_SWRESET_ONLY
@@ -105,8 +101,8 @@ int main(int argc, FAR char *argv[])
         }
       else
         {
-          syslog(LOG_INFO, "Power reset detected, performing check only.\n");
-          nxboot_report(LOG_INFO, "Power reset detected, performing check only.\n");
+          nxboot_report(LOG_INFO, "Power reset detected, "
+                                  "performing check only.\n");
         }
     }
 #else
@@ -115,12 +111,11 @@ int main(int argc, FAR char *argv[])
 
   if (nxboot_perform_update(check_only) < 0)
     {
-      syslog(LOG_ERR, "Could not find bootable image.\n");
-      nxboot_report(LOG_INFO, "Power reset detected, performing check only.\n");
+      nxboot_report(LOG_INFO, "Power reset detected, "
+                              "performing check only.\n");
       return 0;
     }
 
-  syslog(LOG_INFO, "Found bootable image, boot from primary.\n");
   nxboot_report(LOG_INFO, "Found bootable image, boot from primary.\n");
 
   /* Call board specific image boot */
