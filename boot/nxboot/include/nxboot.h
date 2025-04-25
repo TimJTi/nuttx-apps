@@ -39,7 +39,7 @@
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
 #  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-#  define nxboot_report(lvl, text, ...) fprintf(stderr, "%s "  text, g_priority_str[lvl], ##__VA_ARGS__)
+#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s "  text, g_priority_str[lvl], ##__VA_ARGS__)
 #else
   #define nxboot_report(lvl, ...) 
 #endif
