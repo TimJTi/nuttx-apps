@@ -63,6 +63,11 @@ config NXBOOT_ERROR_SYSLOG
 config NXBOOT_ERROR_STDERR
     bool "Error messages sent to stderr"
 
+config NXBOOT_PREPEND_PRIORITY
+	bool "Prepend messages to syslog with priority text"
+	depends on NXBOOT_ERROR_STDERR
+	default y
+
 config NXBOOT_ERROR_NONE
     bool "No error message output"
 

@@ -90,7 +90,7 @@ int main(int argc, FAR char *argv[])
 #endif
 
   syslog(LOG_INFO, "*** nxboot ***\n");
-  nxboot_report(LOG_INFO, "*** nxboot ***\n");
+  nxboot_report(LOG_NOTICE, "*** nxboot ***\n");
 
 #ifdef CONFIG_NXBOOT_SWRESET_ONLY
   check_only = true;

@@ -36,11 +36,15 @@
  ****************************************************************************/
 
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
-  #define nxboot_report(E_LVL, ...) syslog(E_LVL, ##__VA_ARGS__)
+  #define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-  #define nxboot_report(E_LVL, ...) fprintf(stderr, "E_LVL: ##__VA_ARGS__")
+#  ifndef CONFIG_NXBOOT_PREPEND_PRIORITY
+#    define nxboot_report(lvl, text, ...) fprintf(stderr, "%s "  text, g_priority_str[lvl], ##__VA_ARGS__)
+#  else
+#    define nxboot_report(lvl, text, ...) fprintf(stderr, text, ##__VA_ARGS__)
+#  endif
 #else
-  #define nxboot_report(E_LVL, ...) 
+  #define nxboot_report(lvl, ...) 
 #endif
 
 #define NXBOOT_PRIMARY_SLOT_NUM   (0)
@@ -77,6 +81,14 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+
+#ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
+static FAR const char * const g_priority_str[] =
+  {
+    "[EMERG]", "[ALERT]", "[CRIT]", "[ERROR]",
+    "[WARN]", "[NOTE]", "[INFO]", "[DEBUG]"
+  };
+#endif
 
 enum nxboot_update_type
 {
