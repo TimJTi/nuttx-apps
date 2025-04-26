@@ -63,6 +63,9 @@ config NXBOOT_ERROR_SYSLOG
 config NXBOOT_ERROR_STDERR
     bool "Error messages sent to stderr"
 
+config NXBOOT_ERROR_STDOUT
+    bool "Error messages sent to stout"
+
 config NXBOOT_PREPEND_PRIORITY
 	bool "Prepend messages to syslog with priority text"
 	depends on NXBOOT_ERROR_STDERR
@@ -84,6 +87,13 @@ config NXBOOT_BOOTLOADER
 		revert operation, performs it and boot the correct image.
 
 if NXBOOT_BOOTLOADER
+
+config NXBOOT_USE_EXT_ERROR_FN
+    bool "If boot fails, call an out-of-tree error handler"
+    default n
+    ---help---
+      This must be a compiled C source file, and compiled as part of the build.
+      Typically this would be a source file of an out-of-tree custom board.
 
 config NXBOOT_SWRESET_ONLY
 	bool "Perform update/revert only on SW reset"

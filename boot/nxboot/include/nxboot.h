@@ -39,7 +39,14 @@
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
 #  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s "  text, g_priority_str[lvl], ##__VA_ARGS__)
+#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s " \
+                                                text, g_priority_str[lvl], \
+                                                ##__VA_ARGS__)
+#elif defined(CONFIG_NXBOOT_ERROR_STDOUT)
+#  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s " \
+                                                text, g_priority_str[lvl], \
+                                                ##__VA_ARGS__)
+
 #else
   #define nxboot_report(lvl, ...) 
 #endif
@@ -240,5 +247,9 @@ int nxboot_confirm(void);
  ****************************************************************************/
 
 int nxboot_perform_update(bool check_only);
+
+#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
+int nxboot_errhdlr(int err);
+#endif
 
 #endif /* __BOOT_NXBOOT_INCLUDE_NXBOOT_H */

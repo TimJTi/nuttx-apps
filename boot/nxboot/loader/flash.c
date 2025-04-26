@@ -122,7 +122,8 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 
@@ -136,7 +137,8 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
   pos = lseek(fd, off, SEEK_SET);
   if (pos != off)
     {
-      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
+      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
+                              strerror(errno));
       return ERROR;
     }
 
@@ -180,7 +182,8 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 
@@ -194,7 +197,8 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
   pos = lseek(fd, off, SEEK_SET);
   if (pos != off)
     {
-      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
+      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
+                              strerror(errno));
       return ERROR;
     }
 
@@ -294,7 +298,8 @@ int flash_partition_info(int fd, struct flash_partition_info *info)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 

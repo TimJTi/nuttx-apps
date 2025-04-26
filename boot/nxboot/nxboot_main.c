@@ -41,6 +41,12 @@
  * Private Function Prototypes
  ****************************************************************************/
 
+#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
+#define errhdlr(err) nxboot_errhdlr(err)
+#else
+#  define errhdlr(err)
+#endif
+
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -69,8 +75,8 @@ int main(int argc, FAR char *argv[])
 {
   struct boardioc_boot_info_s info;
   bool check_only;
-#ifdef CONFIG_NXBOOT_SWRESET_ONLY
   int ret;
+  #ifdef CONFIG_NXBOOT_SWRESET_ONLY
   FAR struct boardioc_reset_cause_s cause;
 #endif
 
@@ -109,11 +115,13 @@ int main(int argc, FAR char *argv[])
   check_only = false;
 #endif
 
-  if (nxboot_perform_update(check_only) < 0)
+  ret = nxboot_perform_update(check_only);
+  if (ret < 0)
     {
       nxboot_report(LOG_INFO, "Power reset detected, "
                               "performing check only.\n");
-      return 0;
+      errhdlr(ret);
+      return ret;
     }
 
   nxboot_report(LOG_INFO, "Found bootable image, boot from primary.\n");
@@ -123,5 +131,7 @@ int main(int argc, FAR char *argv[])
   info.path        = CONFIG_NXBOOT_PRIMARY_SLOT_PATH;
   info.header_size = CONFIG_NXBOOT_HEADER_SIZE;
 
-  return boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
+  ret = boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
+  errhdlr(ret);
+  return ret;
 }

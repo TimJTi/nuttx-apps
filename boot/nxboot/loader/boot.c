@@ -369,7 +369,8 @@ static int perform_update(struct nxboot_state *state, bool check_only)
           copy_partition(primary, recovery, state, false);
           if (!validate_image(recovery))
             {
-              nxboot_report(LOG_INFO, "New recovery is not valid, stop update.\n");
+              nxboot_report(LOG_INFO,
+                            "New recovery is not valid,stop update.\n");
               goto perform_update_done;
             }
 
@@ -796,7 +797,8 @@ int nxboot_perform_update(bool check_only)
            * primary.
            */
 
-          nxboot_report(LOG_ERR, "Update process failed: %s\n", strerror(errno));
+          nxboot_report(LOG_ERR, "Update process failed: %s\n",
+                                 strerror(errno));
         }
     }
 
