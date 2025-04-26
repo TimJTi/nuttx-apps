@@ -86,6 +86,12 @@
  * Public Types
  ****************************************************************************/
 
+ enum exitcode_e
+ {
+   NXBOOT_EXIT_SUCCESS = 0,
+   NXBOOT_EXIT_FAIL,
+ };
+
 #ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
 static FAR const char * const g_priority_str[] =
 {
@@ -93,8 +99,8 @@ static FAR const char * const g_priority_str[] =
   "[WARN]", "[NOTE]", "[INFO]", "[DEBUG]"
 };
 #else
-#define g_priority_str[lvl]
-  #endif
+#  define g_priority_str[lvl]
+#endif
 
 enum nxboot_update_type
 {
