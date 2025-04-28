@@ -68,7 +68,7 @@ int flash_partition_open(const char *path)
     {
       nxboot_report(LOG_ERR, "Could not open %s partition: %s\n",
               path, strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_PARTITION_OPEN;
     }
 
   return fd;
@@ -124,14 +124,14 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
                               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_MTDIOC_GEOMETRY;
     }
 
   size = geometry.erasesize * geometry.neraseblocks;
   if (count + off > size)
     {
       nxboot_report(LOG_ERR, "Trying to write outside of flash area.\n");
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_ERASE;
     }
 
   pos = lseek(fd, off, SEEK_SET);
@@ -139,7 +139,7 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
                               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_SEEK;
     }
 
   nbytes = write(fd, buf, count);
@@ -147,7 +147,7 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "Write to offset %ld failed %s\n",
               off, strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_WRITE;
     }
 
   return OK;
@@ -184,14 +184,14 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
                               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_MTDIOC_GEOMETRY;
     }
 
   size = geometry.erasesize * geometry.neraseblocks;
   if (count + off > size)
     {
       nxboot_report(LOG_ERR, "Trying to read outside of flash area.\n");
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_READ;
     }
 
   pos = lseek(fd, off, SEEK_SET);
@@ -199,7 +199,7 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
                               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_SEEK;
     }
 
   nbytes = read(fd, buf, count);
@@ -207,7 +207,7 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
     {
       nxboot_report(LOG_ERR, "Read from offset %ld failed %s\n",
               off, strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_READ;
     }
 
   return OK;
@@ -236,7 +236,7 @@ int flash_partition_erase(int fd)
     {
       nxboot_report(LOG_ERR, "Could not erase the partition: %s\n",
               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_ERASE;
     }
 
   return OK;
@@ -269,7 +269,7 @@ int flash_partition_erase_first_sector(int fd)
     {
       nxboot_report(LOG_ERR, "Could not erase the partition: %s\n",
               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_FLASH_ERASE;
     }
 
   return OK;
@@ -300,7 +300,7 @@ int flash_partition_info(int fd, struct flash_partition_info *info)
     {
       nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
                               strerror(errno));
-      return ERROR;
+      return -NXBOOT_FAIL_GET_PARTITION_INFO;
     }
 
   info->blocksize = geometry.blocksize;

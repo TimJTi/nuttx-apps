@@ -28,6 +28,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/nxboot/nxboot_err.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <syslog.h>
@@ -35,7 +36,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
 #  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
@@ -46,7 +46,6 @@
 #  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s " \
                                                 text, g_priority_str[lvl], \
                                                 ##__VA_ARGS__)
-
 #else
   #define nxboot_report(lvl, ...) 
 #endif
@@ -86,17 +85,63 @@
  * Public Types
  ****************************************************************************/
 
- enum exitcode_e
- {
-   NXBOOT_EXIT_SUCCESS = 0,
-   NXBOOT_EXIT_FAIL,
- };
+#if defined CONFIG_NXBOOT_PREPEND_ALL
+#  define PREPEND_LVL 0
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_INFO)
+#  define PREPEND_LVL 1
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_NOTE)
+#  define PREPEND_LVL 2
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_WARN)
+#  define PREPEND_LVL 3
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_ERROR)
+#  define PREPEND_LVL 4
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_CRIT)
+#  define PREPEND_LVL 5
+#elif defined(CONFIG_NXBOOT_PREPEND_FROM_ALERT)
+#  define PREPEND_LVL 6
+#elif defined(CONFIG_NXBOOT_PREPEND_ONLY_EMERG)
+#  define PREPEND_LVL 7
+#endif
 
 #ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
 static FAR const char * const g_priority_str[] =
 {
-  "[EMERG]", "[ALERT]", "[CRIT]", "[ERROR]",
-  "[WARN]", "[NOTE]", "[INFO]", "[DEBUG]"
+  "[EMERG]",
+#  if PREPEND_LVL > 5
+  "[ALERT]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL > 4
+  "[CRIT]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL > 3
+  "[ERROR]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL > 2
+  "[WARN]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL > 1
+  "[NOTE]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL > 0
+  "[INFO]",
+#  else
+  "",
+#  endif
+#  if PREPEND_LVL == 0
+  "[DEBUG]",
+#  else
+  "",  
+#  endif
 };
 #else
 #  define g_priority_str[lvl]

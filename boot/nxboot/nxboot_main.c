@@ -121,7 +121,7 @@ int main(int argc, FAR char *argv[])
       nxboot_report(LOG_INFO, "Power reset detected, "
                               "performing check only.\n");
       errhdlr(ret);
-      return ret;
+      return OK; /* The "OK" is is to retain backwards compatibility */
     }
 
   nxboot_report(LOG_INFO, "Found bootable image, boot from primary.\n");
@@ -132,6 +132,9 @@ int main(int argc, FAR char *argv[])
   info.header_size = CONFIG_NXBOOT_HEADER_SIZE;
 
   ret = boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
+
+  /* We only get here if the board failed to boot the image */
+
   errhdlr(ret);
   return ret;
 }
