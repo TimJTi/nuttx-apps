@@ -31,14 +31,11 @@
 #include <string.h>
 #include <stddef.h>
 #include <fcntl.h>
-#include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-
 #include <nuttx/fs/fs.h>
 #include <nuttx/mtd/mtd.h>
-
 #include <nxboot.h>
 
 #include "flash.h"
@@ -69,8 +66,6 @@ int flash_partition_open(const char *path)
   fd = open(path, O_RDWR);
   if (fd < 0)
     {
-      syslog(LOG_ERR, "Could not open %s partition: %s\n",
-              path, strerror(errno));
       nxboot_report(LOG_ERR, "Could not open %s partition: %s\n",
               path, strerror(errno));
       return ERROR;
@@ -127,15 +122,14 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      syslog(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 
   size = geometry.erasesize * geometry.neraseblocks;
   if (count + off > size)
     {
-      syslog(LOG_ERR, "Trying to write outside of flash area.\n");
       nxboot_report(LOG_ERR, "Trying to write outside of flash area.\n");
       return ERROR;
     }
@@ -143,16 +137,14 @@ int flash_partition_write(int fd, const void *buf, size_t count, off_t off)
   pos = lseek(fd, off, SEEK_SET);
   if (pos != off)
     {
-      syslog(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
-      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
+      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
+                              strerror(errno));
       return ERROR;
     }
 
   nbytes = write(fd, buf, count);
   if (nbytes != count)
     {
-      syslog(LOG_ERR, "Write to offset %ld failed %s\n",
-              off, strerror(errno));
       nxboot_report(LOG_ERR, "Write to offset %ld failed %s\n",
               off, strerror(errno));
       return ERROR;
@@ -190,15 +182,14 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      syslog(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 
   size = geometry.erasesize * geometry.neraseblocks;
   if (count + off > size)
     {
-      syslog(LOG_ERR, "Trying to read outside of flash area.\n");
       nxboot_report(LOG_ERR, "Trying to read outside of flash area.\n");
       return ERROR;
     }
@@ -206,16 +197,14 @@ int flash_partition_read(int fd, void *buf, size_t count, off_t off)
   pos = lseek(fd, off, SEEK_SET);
   if (pos != off)
     {
-      syslog(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
-      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off, strerror(errno));
+      nxboot_report(LOG_ERR, "Could not seek to %ld: %s\n", off,
+                              strerror(errno));
       return ERROR;
     }
 
   nbytes = read(fd, buf, count);
   if (nbytes != count)
     {
-      syslog(LOG_ERR, "Read from offset %ld failed %s\n",
-              off, strerror(errno));
       nxboot_report(LOG_ERR, "Read from offset %ld failed %s\n",
               off, strerror(errno));
       return ERROR;
@@ -245,8 +234,6 @@ int flash_partition_erase(int fd)
   ret = ioctl(fd, MTDIOC_BULKERASE, 0);
   if (ret < 0)
     {
-      syslog(LOG_ERR, "Could not erase the partition: %s\n",
-              strerror(errno));
       nxboot_report(LOG_ERR, "Could not erase the partition: %s\n",
               strerror(errno));
       return ERROR;
@@ -280,8 +267,6 @@ int flash_partition_erase_first_sector(int fd)
   ret = ioctl(fd, MTDIOC_ERASESECTORS, &erase);
   if (ret < 0)
     {
-      syslog(LOG_ERR, "Could not erase the partition: %s\n",
-              strerror(errno));
       nxboot_report(LOG_ERR, "Could not erase the partition: %s\n",
               strerror(errno));
       return ERROR;
@@ -313,8 +298,8 @@ int flash_partition_info(int fd, struct flash_partition_info *info)
   ret = ioctl(fd, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geometry));
   if (ret < 0)
     {
-      syslog(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
-      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n", strerror(errno));
+      nxboot_report(LOG_ERR, "ioctl MTDIOC_GEOMETRY failed: %s\n",
+                              strerror(errno));
       return ERROR;
     }
 

@@ -30,19 +30,23 @@
 #include <nuttx/config.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <syslog.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
-  #define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
+#  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-#  ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
-#    define nxboot_report(lvl, text, ...) fprintf(stderr, "%s "  text, g_priority_str[lvl], ##__VA_ARGS__)
-#  else
-#    define nxboot_report(lvl, text, ...) fprintf(stderr, text, ##__VA_ARGS__)
-#  endif
+#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s " \
+                                                text, g_priority_str[lvl], \
+                                                ##__VA_ARGS__)
+#elif defined(CONFIG_NXBOOT_ERROR_STDOUT)
+#  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s " \
+                                                text, g_priority_str[lvl], \
+                                                ##__VA_ARGS__)
+
 #else
   #define nxboot_report(lvl, ...) 
 #endif
@@ -82,12 +86,20 @@
  * Public Types
  ****************************************************************************/
 
+ enum exitcode_e
+ {
+   NXBOOT_EXIT_SUCCESS = 0,
+   NXBOOT_EXIT_FAIL,
+ };
+
 #ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
 static FAR const char * const g_priority_str[] =
-  {
-    "[EMERG]", "[ALERT]", "[CRIT]", "[ERROR]",
-    "[WARN]", "[NOTE]", "[INFO]", "[DEBUG]"
-  };
+{
+  "[EMERG]", "[ALERT]", "[CRIT]", "[ERROR]",
+  "[WARN]", "[NOTE]", "[INFO]", "[DEBUG]"
+};
+#else
+#  define g_priority_str[lvl]
 #endif
 
 enum nxboot_update_type
@@ -241,5 +253,9 @@ int nxboot_confirm(void);
  ****************************************************************************/
 
 int nxboot_perform_update(bool check_only);
+
+#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
+int nxboot_errhdlr(int err);
+#endif
 
 #endif /* __BOOT_NXBOOT_INCLUDE_NXBOOT_H */
