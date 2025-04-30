@@ -111,7 +111,7 @@ static uint32_t calculate_crc(int fd, struct nxboot_img_header *header)
 }
 
 static int copy_partition(int from, int where, struct nxboot_state *state,
-                          bool update)
+                          bool update, void (*cb)(void))
 {
   struct nxboot_img_header header;
   struct flash_partition_info info_from;
@@ -127,18 +127,18 @@ static int copy_partition(int from, int where, struct nxboot_state *state,
 
   if (flash_partition_info(from, &info_from) < 0)
     {
-      return -NXBOOT_FAIL_COPY_PARTITION;
+      return ERROR;
     }
 
   if (flash_partition_info(where, &info_where) < 0)
     {
-      return -NXBOOT_FAIL_COPY_PARTITION;
+      return ERROR;
     }
 
   remain = header.size + header.header_size;
   if (remain > info_where.size)
     {
-      return -NXBOOT_FAIL_COPY_PARTITION;
+      return ERROR;
     }
 
   blocksize = MAX(info_from.blocksize, info_where.blocksize);
@@ -169,7 +169,7 @@ static int copy_partition(int from, int where, struct nxboot_state *state,
   if (flash_partition_read(from, buf, blocksize, 0) < 0)
     {
       free(buf);
-      return -NXBOOT_FAIL_PARTITION_READ;
+      return ERROR;
     }
 
   memcpy(buf + offsetof(struct nxboot_img_header, magic), &magic,
@@ -177,7 +177,7 @@ static int copy_partition(int from, int where, struct nxboot_state *state,
   if (flash_partition_write(where, buf, blocksize, 0) < 0)
     {
       free(buf);
-      return -NXBOOT_FAIL_PARTITION_WRITE;
+      return ERROR;
     }
 
   off = blocksize;
@@ -189,30 +189,24 @@ static int copy_partition(int from, int where, struct nxboot_state *state,
       if (flash_partition_read(from, buf, readsiz, off) < 0)
         {
           free(buf);
-          return -NXBOOT_FAIL_PARTITION_READ;
+          return ERROR;
         }
 
       if (flash_partition_write(where, buf, readsiz, off) < 0)
         {
           free(buf);
-          return -NXBOOT_FAIL_PARTITION_WRITE;
+          return ERROR;
         }
 
       off += readsiz;
       remain -= readsiz;
-#if defined (CONFIG_NXBOOT_ERROR_STDERR) || \
-    defined(CONFIG_NXBOOT_ERROR_STDOUT)
       if ((remain % 25) == 0)
         {
-          nxboot_report(LOG_PRINT, ".");
+          cb(); /* Callback to allow progress update */
         }
-#endif
     }
 
-#if defined (CONFIG_NXBOOT_ERROR_STDERR) || \
-    defined(CONFIG_NXBOOT_ERROR_STDOUT)
-  nxboot_report(LOG_PRINT, "\n");
-#endif
+  nxboot_print_info("\n");
 
   free(buf);
   return OK;
@@ -228,7 +222,7 @@ static bool validate_image(int fd, const char *msg)
       return false;
     }
 
-  nxboot_report(LOG_INFO, "Validating %s image...\n", msg);
+  nxboot_log(LOG_INFO, "Validating %s image...\n", msg);
   return calculate_crc(fd, &header) == header.crc;
 }
 
@@ -301,7 +295,8 @@ static enum nxboot_update_type
   return NXBOOT_UPDATE_TYPE_NONE;
 }
 
-static int perform_update(struct nxboot_state *state, bool check_only)
+static int perform_update(struct nxboot_state *state, bool check_only,
+                          void (*cb)(void))
 {
   int update;
   int recovery;
@@ -313,14 +308,14 @@ static int perform_update(struct nxboot_state *state, bool check_only)
   primary = flash_partition_open(CONFIG_NXBOOT_PRIMARY_SLOT_PATH);
   if (primary < 0)
     {
-      return -NXBOOT_FAIL_PRIMARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   secondary = flash_partition_open(CONFIG_NXBOOT_SECONDARY_SLOT_PATH);
   if (secondary < 0)
     {
       flash_partition_close(primary);
-      return -NXBOOT_FAIL_SECONDARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   tertiary = flash_partition_open(CONFIG_NXBOOT_TERTIARY_SLOT_PATH);
@@ -328,7 +323,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
     {
       flash_partition_close(primary);
       flash_partition_close(secondary);
-      return -NXBOOT_FAIL_TERTIARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   if (state->update == NXBOOT_SECONDARY_SLOT_NUM)
@@ -347,8 +342,8 @@ static int perform_update(struct nxboot_state *state, bool check_only)
     {
       if (state->recovery_valid)
         {
-          nxboot_report(LOG_INFO, "Reverting image to recovery.\n");
-          copy_partition(recovery, primary, state, false);
+          nxboot_log(LOG_INFO, "Reverting image to recovery.\n");
+          copy_partition(recovery, primary, state, false, cb);
         }
     }
   else
@@ -378,24 +373,24 @@ static int perform_update(struct nxboot_state *state, bool check_only)
            * to upload this to recovery.
            */
 
-          nxboot_report(LOG_INFO, "Creating recovery image.\n");
-          copy_partition(primary, recovery, state, false);
+          nxboot_log(LOG_INFO, "Creating recovery image.\n");
+          copy_partition(primary, recovery, state, false, cb);
           if (!validate_image(recovery, "recovery"))
             {
-              nxboot_report(LOG_INFO,
+              nxboot_log(LOG_INFO,
                             "New recovery is not valid,stop update.\n");
               goto perform_update_done;
             }
 
-          nxboot_report(LOG_INFO, "Recovery image created.\n");
+          nxboot_log(LOG_INFO, "Recovery image created.\n");
         }
 
       if (validate_image(update, "update"))
         {
           /* Perform update only if update slot contains valid image. */
 
-          nxboot_report(LOG_INFO, "Updating from update image.\n");
-          if (copy_partition(update, primary, state, true) >= 0)
+          nxboot_log(LOG_INFO, "Updating from update image.\n");
+          if (copy_partition(update, primary, state, true, cb) >= 0)
             {
               /* Erase the first sector of update partition. This marks the
                * partition as updated so we don't end up in an update loop.
@@ -455,14 +450,14 @@ int nxboot_get_state(struct nxboot_state *state)
   primary = flash_partition_open(CONFIG_NXBOOT_PRIMARY_SLOT_PATH);
   if (primary < 0)
     {
-      return -NXBOOT_FAIL_PRIMARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   secondary = flash_partition_open(CONFIG_NXBOOT_SECONDARY_SLOT_PATH);
   if (secondary < 0)
     {
       flash_partition_close(primary);
-      return -NXBOOT_FAIL_SECONDARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   tertiary = flash_partition_open(CONFIG_NXBOOT_TERTIARY_SLOT_PATH);
@@ -470,7 +465,7 @@ int nxboot_get_state(struct nxboot_state *state)
     {
       flash_partition_close(primary);
       flash_partition_close(secondary);
-      return -NXBOOT_FAIL_TERTIARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   get_image_header(primary, &primary_header);
@@ -630,7 +625,7 @@ int nxboot_get_confirm(void)
   primary = flash_partition_open(CONFIG_NXBOOT_PRIMARY_SLOT_PATH);
   if (primary < 0)
     {
-      return -NXBOOT_FAIL_PRIMARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   get_image_header(primary, &primary_header);
@@ -653,7 +648,7 @@ int nxboot_get_confirm(void)
           if (recovery < 0)
             {
               close(primary);
-              return -NXBOOT_FAIL_RECOVERY_PARTITION_OPEN;
+              return ERROR;
             }
 
           get_image_header(recovery, &recovery_header);
@@ -708,14 +703,14 @@ int nxboot_confirm(void)
   primary = flash_partition_open(CONFIG_NXBOOT_PRIMARY_SLOT_PATH);
   if (primary < 0)
     {
-      return -NXBOOT_FAIL_PRIMARY_PARTITION_OPEN;
+      return ERROR;
     }
 
   update = flash_partition_open(path);
   if (update < 0)
     {
       flash_partition_close(primary);
-      return -NXBOOT_FAIL_RECOVERY_PARTITION_OPEN;
+      return ERROR;
     }
 
   /* Confirm the image by creating a recovery. The recovery image is
@@ -725,7 +720,7 @@ int nxboot_confirm(void)
 
   if (flash_partition_info(update, &info_update) < 0)
     {
-      ret = -NXBOOT_FAIL_GET_PARTITION_INFO;
+      ret = ERROR;
       goto confirm_done;
     }
 
@@ -742,14 +737,14 @@ int nxboot_confirm(void)
       if (flash_partition_read(primary, buf, readsiz, off) < 0)
         {
           free(buf);
-          ret = -NXBOOT_FAIL_PARTITION_READ;
+          ret = ERROR;
           goto confirm_done;
         }
 
       if (flash_partition_write(update, buf, readsiz, off) < 0)
         {
           free(buf);
-          ret = -NXBOOT_FAIL_PARTITION_WRITE;
+          ret = ERROR;
           goto confirm_done;
         }
 
@@ -786,7 +781,7 @@ confirm_done:
  *
  ****************************************************************************/
 
-int nxboot_perform_update(bool check_only)
+int nxboot_perform_update(bool check_only, void (*cb)(void))
 {
   int ret;
   int primary;
@@ -796,21 +791,21 @@ int nxboot_perform_update(bool check_only)
   ret = nxboot_get_state(&state);
   if (ret < 0)
     {
-      return -NXBOOT_EXIT_GET_STATE;
+      return ERROR;
     }
 
   if (state.next_boot != NXBOOT_UPDATE_TYPE_NONE)
     {
       /* We either want to update or revert. */
 
-      ret = perform_update(&state, check_only);
+      ret = perform_update(&state, check_only, cb);
       if (ret < 0)
         {
           /* Update process failed, raise error and try to boot into
            * primary.
            */
 
-          nxboot_report(LOG_ERR, "Update process failed: %s\n",
+          nxboot_log(LOG_ERR, "Update process failed: %s\n",
                                  strerror(errno));
         }
     }
@@ -823,13 +818,13 @@ int nxboot_perform_update(bool check_only)
   primary = flash_partition_open(CONFIG_NXBOOT_PRIMARY_SLOT_PATH);
   if (primary < 0)
     {
-      return -NXBOOT_EXIT_PRIMARY_SLOT_OPEN;
+      return ERROR;
     }
 
   get_image_header(primary, &header);
   if (!validate_image_header(&header))
     {
-      ret = -NXBOOT_FAIL_PRIMARY_SLOT_HEADER_VALIDATE;
+      ret = ERROR;
     }
 
   flash_partition_close(primary);

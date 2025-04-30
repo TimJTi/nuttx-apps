@@ -33,6 +33,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
+#define errhdlr(err) nxboot_errhdlr(err)
+#else
+#  define errhdlr(err)
+#endif
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -42,10 +48,10 @@
  ****************************************************************************/
 
 #ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
-#define errhdlr(err) nxboot_errhdlr(err)
-#else
-#  define errhdlr(err)
+extern void nxboot_errhdlr(int err);
 #endif
+
+static void progress(void);
 
 /****************************************************************************
  * Public Data
@@ -58,6 +64,11 @@
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+void progress(void)
+{
+  nxboot_print_info(".");
+}
 
 /****************************************************************************
  * Public Functions
@@ -92,7 +103,7 @@ int main(int argc, FAR char *argv[])
 #endif
 #endif
 
-  nxboot_report(LOG_NOTICE, "*** nxboot ***\n");
+  nxboot_log(LOG_NOTICE, "*** nxboot ***\n");
 
 #ifdef CONFIG_NXBOOT_SWRESET_ONLY
   check_only = true;
@@ -107,7 +118,7 @@ int main(int argc, FAR char *argv[])
         }
       else
         {
-          nxboot_report(LOG_INFO, "Power reset detected, "
+          nxboot_log(LOG_INFO, "Power reset detected, "
                                   "performing check only.\n");
         }
     }
@@ -115,30 +126,27 @@ int main(int argc, FAR char *argv[])
   check_only = false;
 #endif
 
-  ret = nxboot_perform_update(check_only);
+  ret = nxboot_perform_update(check_only, progress);
   if (ret < 0)
     {
-      nxboot_report(LOG_INFO, "Power reset detected, "
+      nxboot_log(LOG_INFO, "Power reset detected, "
                               "performing check only.\n");
       errhdlr(ret);
-      return OK; /* The "OK" is is to retain backwards compatibility */
+      return OK;
     }
 
-  nxboot_report(LOG_INFO, "Found bootable image, boot from primary.\n");
+  nxboot_log(LOG_INFO, "Found bootable image, boot from primary.\n");
 
   /* Call board specific image boot */
 
   info.path        = CONFIG_NXBOOT_PRIMARY_SLOT_PATH;
   info.header_size = CONFIG_NXBOOT_HEADER_SIZE;
 
-#if 0 /* During testing only */
-  errhdlr(NXBOOT_FAIL_BOOT_IMAGE);
-#else
   ret = boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
 
   /* We only get here if the board failed to boot the image */
 
-  errhdlr(NXBOOT_FAIL_BOOT_IMAGE);
-#endif
-  return ret;   /* The "ret" is is to retain backwards compatibility */
+  errhdlr(ret);
+
+  return ret;
 }
