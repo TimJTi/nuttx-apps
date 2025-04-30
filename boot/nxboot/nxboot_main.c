@@ -33,12 +33,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
-#define errhdlr(err) nxboot_errhdlr(err)
-#else
-#  define errhdlr(err)
-#endif
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -86,7 +80,6 @@ int main(int argc, FAR char *argv[])
 {
   struct boardioc_boot_info_s info;
   bool check_only;
-  int ret;
   #ifdef CONFIG_NXBOOT_SWRESET_ONLY
   FAR struct boardioc_reset_cause_s cause;
 #endif
@@ -126,12 +119,9 @@ int main(int argc, FAR char *argv[])
   check_only = false;
 #endif
 
-  ret = nxboot_perform_update(check_only, progress);
-  if (ret < 0)
+  if (nxboot_perform_update(check_only, progress) < 0)
     {
-      nxboot_log(LOG_INFO, "Power reset detected, "
-                              "performing check only.\n");
-      errhdlr(ret);
+      nxboot_log(LOG_INFO, "Could not find bootable image.\n");
       return OK;
     }
 
@@ -142,11 +132,6 @@ int main(int argc, FAR char *argv[])
   info.path        = CONFIG_NXBOOT_PRIMARY_SLOT_PATH;
   info.header_size = CONFIG_NXBOOT_HEADER_SIZE;
 
-  ret = boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
+  return boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
 
-  /* We only get here if the board failed to boot the image */
-
-  errhdlr(ret);
-
-  return ret;
 }
