@@ -200,7 +200,19 @@ static int copy_partition(int from, int where, struct nxboot_state *state,
 
       off += readsiz;
       remain -= readsiz;
+#if defined (CONFIG_NXBOOT_ERROR_STDERR) || \
+    defined(CONFIG_NXBOOT_ERROR_STDOUT)
+      if ((remain % 25) == 0)
+        {
+          nxboot_report(LOG_PRINT, ".");
+        }
+#endif
     }
+
+#if defined (CONFIG_NXBOOT_ERROR_STDERR) || \
+    defined(CONFIG_NXBOOT_ERROR_STDOUT)
+  nxboot_report(LOG_PRINT, "\n");
+#endif
 
   free(buf);
   return OK;

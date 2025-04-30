@@ -28,23 +28,26 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/nxboot/nxboot_err.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <syslog.h>
+#include <boot/nxboot.h> /* Public shared header file */
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
+#define LOG_PRINT -1
+
 #if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
-#  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
+#  define nxboot_report(lvl, text, ...) syslog(lvl - 1, text, ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s " \
-                                                text, g_priority_str[lvl], \
+#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s" \
+                                                text, g_priority_str[lvl + 1], \
                                                 ##__VA_ARGS__)
 #elif defined(CONFIG_NXBOOT_ERROR_STDOUT)
-#  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s " \
-                                                text, g_priority_str[lvl], \
+#  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s" \
+                                                text, g_priority_str[lvl + 1], \
                                                 ##__VA_ARGS__)
 #else
   #define nxboot_report(lvl, ...) 
@@ -79,7 +82,7 @@
 #define NXBOOT_HEADER_MAGIC_INT_MASK 0xfffffff0
 #define NXBOOT_RECOVERY_PTR_MASK 0x3
 
-#define NXBOOT_HEADER_PRERELEASE_MAXLEN 94
+
 
 /****************************************************************************
  * Public Types
@@ -106,41 +109,42 @@
 #ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
 static FAR const char * const g_priority_str[] =
 {
-  "[EMERG]",
+  "",
+  "[EMERG] ",
 #  if PREPEND_LVL > 5
-  "[ALERT]",
+  "[ALERT] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL > 4
-  "[CRIT]",
+  "[CRIT] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL > 3
-  "[ERROR]",
+  "[ERROR] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL > 2
-  "[WARN]",
+  "[WARN] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL > 1
-  "[NOTE]",
+  "[NOTE] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL > 0
-  "[INFO]",
+  "[INFO] ",
 #  else
   "",
 #  endif
 #  if PREPEND_LVL == 0
-  "[DEBUG]",
+  "[DEBUG] ",
 #  else
-  "",  
+  "",
 #  endif
 };
 #else
@@ -194,6 +198,7 @@ struct nxboot_img_header
 
   struct nxboot_img_version img_version; /* Image version */
 };
+
 static_assert(CONFIG_NXBOOT_HEADER_SIZE > sizeof(struct nxboot_img_header),
               "CONFIG_NXBOOT_HEADER_SIZE has to be larger than"
               "sizeof(struct nxboot_img_header)");
@@ -278,7 +283,7 @@ int nxboot_get_confirm(void);
 int nxboot_confirm(void);
 
 /****************************************************************************
- * Name: nxboot_perform_swap
+ * Name: nxboot_perform_update
  *
  * Description:
  *   Checks for the possible firmware update and performs it by copying
@@ -298,9 +303,5 @@ int nxboot_confirm(void);
  ****************************************************************************/
 
 int nxboot_perform_update(bool check_only);
-
-#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
-int nxboot_errhdlr(int err);
-#endif
 
 #endif /* __BOOT_NXBOOT_INCLUDE_NXBOOT_H */

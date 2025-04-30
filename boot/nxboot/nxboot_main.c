@@ -131,10 +131,14 @@ int main(int argc, FAR char *argv[])
   info.path        = CONFIG_NXBOOT_PRIMARY_SLOT_PATH;
   info.header_size = CONFIG_NXBOOT_HEADER_SIZE;
 
+#if 0 /* During testing only */
+  errhdlr(NXBOOT_FAIL_BOOT_IMAGE);
+#else
   ret = boardctl(BOARDIOC_BOOT_IMAGE, (uintptr_t)&info);
 
   /* We only get here if the board failed to boot the image */
 
-  errhdlr(ret);
-  return ret;
+  errhdlr(NXBOOT_FAIL_BOOT_IMAGE);
+#endif
+  return ret;   /* The "ret" is is to retain backwards compatibility */
 }
