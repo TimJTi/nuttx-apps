@@ -28,7 +28,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/nxboot/nxboot_err.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <syslog.h>
@@ -36,19 +35,32 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#if defined(CONFIG_NXBOOT_ERROR_SYSLOG) && defined(CONFIG_SYSLOG)
-#  define nxboot_report(lvl, text, ...) syslog(lvl, text, ##__VA_ARGS__)
-#elif defined(CONFIG_NXBOOT_ERROR_STDERR)
-#  define nxboot_report(lvl, text, ...) dprintf(STDERR_FILENO, "%s " \
-                                                text, g_priority_str[lvl], \
-                                                ##__VA_ARGS__)
-#elif defined(CONFIG_NXBOOT_ERROR_STDOUT)
-#  define nxboot_report(lvl, text, ...) dprintf(STDOUT_FILENO, "%s " \
-                                                text, g_priority_str[lvl], \
-                                                ##__VA_ARGS__)
+
+#ifdef CONFIG_NXBOOT_PRINT_STDERR
+#  define nxboot_print_err(text, ...) dprintf(STDERR_FILENO, text, ##__VA_ARGS__)
 #else
-  #define nxboot_report(lvl, ...) 
+#  define nxboot_print_err(text, ...)
 #endif
+#ifdef CONFIG_NXBOOT_PRINT_STDOUT
+#  define nxboot_print_info(text, ...) dprintf(STDOUT_FILENO, text, ##__VA_ARGS__)
+#else
+#  define nxboot_print_info(text, ...)
+#endif
+
+#define nxboot_log(lvl, msg, ...) \
+{\
+  syslog(lvl, msg, ##__VA_ARGS__);\
+  if (lvl == LOG_INFO)\
+    {\
+      nxboot_print_info(msg, ##__VA_ARGS__);\
+    }\
+  else\
+    {\
+      nxboot_print_err(msg, ##__VA_ARGS__);\
+    }\
+}
+
+
 
 #define NXBOOT_PRIMARY_SLOT_NUM   (0)
 #define NXBOOT_SECONDARY_SLOT_NUM (1)
@@ -84,68 +96,6 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-
-#if defined CONFIG_NXBOOT_PREPEND_ALL
-#  define PREPEND_LVL 0
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_INFO)
-#  define PREPEND_LVL 1
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_NOTE)
-#  define PREPEND_LVL 2
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_WARN)
-#  define PREPEND_LVL 3
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_ERROR)
-#  define PREPEND_LVL 4
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_CRIT)
-#  define PREPEND_LVL 5
-#elif defined(CONFIG_NXBOOT_PREPEND_FROM_ALERT)
-#  define PREPEND_LVL 6
-#elif defined(CONFIG_NXBOOT_PREPEND_ONLY_EMERG)
-#  define PREPEND_LVL 7
-#endif
-
-#ifdef CONFIG_NXBOOT_PREPEND_PRIORITY
-static FAR const char * const g_priority_str[] =
-{
-  "[EMERG]",
-#  if PREPEND_LVL > 5
-  "[ALERT]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL > 4
-  "[CRIT]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL > 3
-  "[ERROR]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL > 2
-  "[WARN]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL > 1
-  "[NOTE]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL > 0
-  "[INFO]",
-#  else
-  "",
-#  endif
-#  if PREPEND_LVL == 0
-  "[DEBUG]",
-#  else
-  "",  
-#  endif
-};
-#else
-#  define g_priority_str[lvl]
-#endif
 
 enum nxboot_update_type
 {
@@ -194,6 +144,7 @@ struct nxboot_img_header
 
   struct nxboot_img_version img_version; /* Image version */
 };
+
 static_assert(CONFIG_NXBOOT_HEADER_SIZE > sizeof(struct nxboot_img_header),
               "CONFIG_NXBOOT_HEADER_SIZE has to be larger than"
               "sizeof(struct nxboot_img_header)");
@@ -278,7 +229,7 @@ int nxboot_get_confirm(void);
 int nxboot_confirm(void);
 
 /****************************************************************************
- * Name: nxboot_perform_swap
+ * Name: nxboot_perform_update
  *
  * Description:
  *   Checks for the possible firmware update and performs it by copying
@@ -297,10 +248,6 @@ int nxboot_confirm(void);
  *
  ****************************************************************************/
 
-int nxboot_perform_update(bool check_only);
-
-#ifdef CONFIG_NXBOOT_USE_EXT_ERROR_FN
-int nxboot_errhdlr(int err);
-#endif
+int nxboot_perform_update(bool check_only, void (*cb)(void));
 
 #endif /* __BOOT_NXBOOT_INCLUDE_NXBOOT_H */

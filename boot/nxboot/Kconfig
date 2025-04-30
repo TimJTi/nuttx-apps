@@ -52,70 +52,13 @@ config NXBOOT_PLATFORM_IDENTIFIER
 		(or even a firmware uploaded via a programmer) is rejected if the
 		value in image's header doesn't match this option.
 
-choice
-    prompt "NXboot error reporting"
-    default NXBOOT_ERROR_SYSLOG
+config NXBOOT_PRINT_STDOUT
+    bool "Enable the printing of syslog LOG_INFO messages to stdout"
+	default n
 
-config NXBOOT_ERROR_SYSLOG
-    bool "Error messages sent to syslog"
-    depends on SYSLOG
-
-config NXBOOT_ERROR_STDERR
-    bool "Error messages sent to stderr"
-
-config NXBOOT_ERROR_STDOUT
-    bool "Error messages sent to stout"
-
-config NXBOOT_ERROR_NONE
-    bool "No error message output"
-
-endchoice
-
-config NXBOOT_PREPEND_PRIORITY
-	bool "Prepend messages to stderr/stdout with priority text"
-	depends on NXBOOT_ERROR_STDERR || NXBOOT_ERROR_STDOUT
-	default y
-	---help---
-		Maps the syslog-type LOG level to a text prefix:
-		- [EMERG]
-		- [ALERT]
-		- [CRIT]
-		- [ERROR]
-  		- [WARN]
-		- [NOTE]
-		- [INFO]
-		- [DEBUG]
-
-choice NXBOOT_PREPEND_ABOVE_LVL
-	prompt "Select the message priority level from which the LOG level text will be shown"
-	default NXBOOT_PREPEND_FROM_NOTE
-	depends on NXBOOT_PREPEND_PRIORITY
-
-config NXBOOT_PREPEND_ALL
-	bool "Prepend all messages"
-
-config NXBOOT_PREPEND_FROM_INFO
-	bool "Prepend all messages Info level and above"
-
-config NXBOOT_PREPEND_FROM_NOTE
-	bool "Prepend all messages Note level and above"
-
-config NXBOOT_PREPEND_FROM_WARN
-	bool "Prepend all messages Warn level and above"
-
-config NXBOOT_PREPEND_FROM_ERROR
-	bool "Prepend all messages Error level and above"
-
-config NXBOOT_PREPEND_FROM_CRIT
-	bool "Prepend all messages Critical level and above"
-
-config NXBOOT_PREPEND_FROM_ALERT
-	bool "Prepend all messages Alert level and above"
-
-config NXBOOT_PREPEND_ONLY_EMERG
-	bool "Prepend only Emergency messages"
-
-endchoice # NXBOOT_PREPEND_PRIORITY
+config NXBOOT_PRINT_STDERR
+    bool "Enable the printing of syslog messages above LOG_INFO to stderr"
+	default n
 
 config NXBOOT_BOOTLOADER
 	bool "Build nxboot bootloader application"
