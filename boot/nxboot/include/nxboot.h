@@ -36,32 +36,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_NXBOOT_PRINT_STDERR
-#  define nxboot_print_err(text, ...) dprintf(STDERR_FILENO, text, ##__VA_ARGS__)
-#else
-#  define nxboot_print_err(text, ...)
-#endif
-#ifdef CONFIG_NXBOOT_PRINT_STDOUT
-#  define nxboot_print_info(text, ...) dprintf(STDOUT_FILENO, text, ##__VA_ARGS__)
-#else
-#  define nxboot_print_info(text, ...)
-#endif
-
-#define nxboot_log(lvl, msg, ...) \
-{\
-  syslog(lvl, msg, ##__VA_ARGS__);\
-  if (lvl == LOG_INFO)\
-    {\
-      nxboot_print_info(msg, ##__VA_ARGS__);\
-    }\
-  else\
-    {\
-      nxboot_print_err(msg, ##__VA_ARGS__);\
-    }\
-}
-
-
-
 #define NXBOOT_PRIMARY_SLOT_NUM   (0)
 #define NXBOOT_SECONDARY_SLOT_NUM (1)
 #define NXBOOT_TERTIARY_SLOT_NUM  (2)
@@ -159,9 +133,38 @@ struct nxboot_state
   enum nxboot_update_type next_boot;  /* nxboot_update_type with next operation */
 };
 
+enum progress_type_e
+{
+  nxboot_info = 0,       /* Prefixes arg. string with "INFO:" */
+  nxboot_error,          /* Prefixes arg. string with "ERR:" */
+  nxboot_progress_start, /* Prints arg. string with no newline to allow ..... sequence to follow */
+  nxboot_progress_dot,   /* Prints of a "." to the ..... progress sequence */
+  nxboot_progress_end,   /* Flags end of a "..." progrees sequence and prints newline */
+};
+
+enum progress_msg_e
+{
+  startup_msg              = 0,
+  found_bootable_image,
+  no_bootable_image,
+  boardioc_image_boot_fail,
+  ramcopy_started,
+  recovery_revert,
+  recovery_create,
+  update_from_update,
+  validate_primary,
+  validate_recovery,
+  validate_update,
+  recovery_created,
+  recovery_invalid,
+  update_failed,
+};
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
+
+void nxboot_progress(enum progress_type_e type, ...);
 
 /****************************************************************************
  * Name: nxboot_get_state
@@ -176,7 +179,7 @@ struct nxboot_state
  *   state: The pointer to nxboot_state structure. The state is stored here.
  *
  * Returned Value:
- *   0 on success, -1 and sets errno on failure.
+ *   OK (0) on success, ERROR (-1) and sets errno on failure.
  *
  ****************************************************************************/
 
@@ -192,7 +195,7 @@ int nxboot_get_state(struct nxboot_state *state);
  *   if afterwards.
  *
  * Returned Value:
- *   Valid file descriptor on success, -1 and sets errno on failure.
+ *   Valid file descriptor on success, ERROR (-1) and sets errno on failure.
  *
  ****************************************************************************/
 
@@ -208,7 +211,7 @@ int nxboot_open_update_partition(void);
  *   state of the bootloader.
  *
  * Returned Value:
- *   1 means confirmed, 0 not confirmed, -1 and sets errno on failure.
+ *   1 if confirmed, OK (0) on success, ERROR (-1) and sets errno on failure.
  *
  ****************************************************************************/
 
@@ -222,7 +225,7 @@ int nxboot_get_confirm(void);
  *   its copy in update partition as a recovery.
  *
  * Returned Value:
- *   0 on success, -1 and sets errno on failure.
+ *   OK (0) on success, ERROR (-1) and sets errno on failure.
  *
  ****************************************************************************/
 
@@ -244,10 +247,29 @@ int nxboot_confirm(void);
  *   check_only: Only repairs corrupted update, but do not start another one
  *
  * Returned Value:
- *   0 on success, -1 and sets errno on failure.
+ *   OK (0) on success, ERROR (-1) and sets errno on failure.
  *
  ****************************************************************************/
 
-int nxboot_perform_update(bool check_only, void (*cb)(void));
+int nxboot_perform_update(bool check_only);
+
+/****************************************************************************
+ * Name: nxboot_ramcopy
+ *
+ * Description:
+ *   Copies the (already) validate bootable image to RAM memory
+ *
+ *   NOTE - no checking that the RAM location is correct, nor that the
+ *          image size is appropriate for that RAM address!
+ *
+ * Input parameters:
+ *   none
+ *
+ * Returned Value:
+ *   OK (0) on success, ERROR (-1) on fail
+ *
+ ****************************************************************************/
+
+int nxboot_ramcopy(void);
 
 #endif /* __BOOT_NXBOOT_INCLUDE_NXBOOT_H */

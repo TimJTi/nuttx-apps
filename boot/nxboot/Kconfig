@@ -72,6 +72,17 @@ config NXBOOT_BOOTLOADER
 
 if NXBOOT_BOOTLOADER
 
+config NXBOOT_COPY_TO_RAM
+	bool "Copy bootable image to RAM before calling board boot-image function"
+	default n
+
+config NXBOOT_RAMSTART
+	hex "Start address in RAM that the application is to be loaded"
+	default 0x0
+	depends on NXBOOT_COPY_TO_RAM
+	---help---
+		This will be board specific
+
 config NXBOOT_SWRESET_ONLY
 	bool "Perform update/revert only on SW reset"
 	default n
@@ -99,6 +110,10 @@ config NXBOOT_PREVENT_DOWNGRADE
 
 		WARNING: NXboot currently implements preferences only for
 		MAJOR.MINOR.PATCH and ignores prerelease.
+
+config NXBOOT_PRINTF_PROGRESS
+	bool "Allow progress messages to be printed to STDOUT"
+	default n
 
 endif # NXBOOT_BOOTLOADER
 
