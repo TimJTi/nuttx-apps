@@ -53,11 +53,11 @@ config NXBOOT_PLATFORM_IDENTIFIER
 		value in image's header doesn't match this option.
 
 config NXBOOT_PRINT_STDOUT
-    bool "Enable the printing of syslog LOG_INFO messages to stdout"
+	bool "Enable the printing of syslog LOG_INFO messages to stdout"
 	default n
 
 config NXBOOT_PRINT_STDERR
-    bool "Enable the printing of syslog messages above LOG_INFO to stderr"
+	bool "Enable the printing of syslog messages above LOG_INFO to stderr"
 	default n
 
 config NXBOOT_BOOTLOADER
@@ -112,7 +112,7 @@ config NXBOOT_PREVENT_DOWNGRADE
 		MAJOR.MINOR.PATCH and ignores prerelease.
 
 config NXBOOT_PRINTF_PROGRESS
-	bool "Allow progress messages to be printed to STDOUT"
+	bool "Enable progress messages to be sent to STDOUT"
 	default n
 
 endif # NXBOOT_BOOTLOADER

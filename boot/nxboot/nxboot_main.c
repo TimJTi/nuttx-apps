@@ -82,6 +82,17 @@ static const char *g_progress_txt[] =
  * Public Functions
  ****************************************************************************/
 
+/****************************************************************************
+ * Name: nxboot_progress
+ *
+ * Description:
+ *   If enabled, thos function prints progress messages to stdout.
+ *   Messages are handled via integer enums, allowing this function to be
+ *   easily replaced if required with no changes needed to the underlying
+ *   code
+ *
+ ****************************************************************************/
+
 void nxboot_progress(enum progress_type_e type, ...)
 {
 #ifdef CONFIG_NXBOOT_PRINTF_PROGRESS
@@ -159,7 +170,7 @@ void nxboot_progress(enum progress_type_e type, ...)
  * Name: nxboot_main
  *
  * Description:
- *   NuttX bootlaoder entry point.
+ *   NuttX bootloader entry point.
  *
  ****************************************************************************/
 
