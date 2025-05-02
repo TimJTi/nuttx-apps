@@ -421,10 +421,10 @@ static const struct vt100_sequence_s g_vt100sequences[] =
 
 #ifdef CONFIG_EXAMPLES_FBCON_SHOW_WELCOME
 #  ifdef CONFIG_EXAMPLES_FBCON_PIPE_STDOUT
-static const char g_stdout_hello[] = "Hello FBCON stdout dprintf output!";
+static const char g_stdout_hello[] = "Hello FBCON stdout fprintf output!";
 #  endif
 #  ifdef CONFIG_EXAMPLES_FBCON_PIPE_STDERR
-static const char g_stderr_hello[] = "Hello FBCON stderr dprintf output!";
+static const char g_stderr_hello[] = "Hello FBCON stderr fprintf output!";
 #  endif
 #endif
 
@@ -734,7 +734,7 @@ static inline void fbcon_movedisplay(struct fbcon_state_s *st, int bottom,
   ret = fbcon_fill(st, &rect, &st->bcolor);
   if (ret < 0)
     {
-      dprintf(STDERR_FILENO, "fbcon_movedisplay: fbcon_fill failed: %d\n", errno);
+      fprintf(stderr, "fbcon_movedisplay: fbcon_fill failed: %d\n", errno);
     }
 }
 
@@ -2254,7 +2254,7 @@ static bool has_input(int fd)
     {
       /* Handle error */
 
-      dprintf(STDERR_FILENO, "poll failed: %d, fd=%d\n", ret, fd);
+      fprintf(stderr, "poll failed: %d, fd=%d\n", ret, fd);
       return false;
     }
 
@@ -2334,7 +2334,7 @@ static void poll_std_streams(FAR struct fbcon_state_s *st)
 
       if (num_ch != 1)
         {
-          dprintf(STDERR_FILENO, "STDIN read failed\n");
+          fprintf(stderr, "STDIN read failed\n");
           return;
         }
 
@@ -2343,7 +2343,7 @@ static void poll_std_streams(FAR struct fbcon_state_s *st)
       num = write(g_nsh_stdin[WRITE_PIPE], &ch, 1);
       if (num != num_ch)
         {
-          dprintf(STDERR_FILENO, "STDIN write failed\n");
+          fprintf(stderr, "STDIN write failed\n");
           return;
         }
 
@@ -2393,8 +2393,8 @@ int main(int argc, FAR char *argv[])
     }
   else if (argc != 1)
     {
-      dprintf(STDERR_FILENO, "ERROR: Single argument required\n");
-      dprintf(STDERR_FILENO, "USAGE: %s [<fb-driver-path>]\n", argv[0]);
+      fprintf(stderr, "ERROR: Single argument required\n");
+      fprintf(stderr, "USAGE: %s [<fb-driver-path>]\n", argv[0]);
       return FBCON_EXIT_FAIL;
     }
 
@@ -2436,7 +2436,7 @@ int main(int argc, FAR char *argv[])
   if (ret < 0)
     {
       int errcode = errno;
-      dprintf(STDERR_FILENO, "ERROR: ioctl(FBIOGET_VIDEOINFO) failed: %d\n",
+      fprintf(stderr, "ERROR: ioctl(FBIOGET_VIDEOINFO) failed: %d\n",
                        errcode);
       exitcode = FBCON_EXIT_GETVINFO;
       goto errout;
@@ -2632,13 +2632,11 @@ int main(int argc, FAR char *argv[])
 
 #ifdef CONFIG_EXAMPLES_FBCON_SHOW_WELCOME
 #  ifdef CONFIG_EXAMPLES_FBCON_PIPE_STDOUT
-  dprintf(STDOUT_FILENO, "%s\n", g_stdout_hello);
+  fprintf(stdout, "%s\n", g_stdout_hello);
   fsync(STDOUT_FILENO);
-  //fflush(stdout);
 #  endif
 #  ifdef CONFIG_EXAMPLES_FBCON_PIPE_STDERR
-  dprintf(STDERR_FILENO, "%s\n", g_stderr_hello);
-  //fflush(stderr);
+  fprintf(stderr, "%s\n", g_stderr_hello);
   fsync(STDERR_FILENO);
 #  endif
 #endif
@@ -2651,7 +2649,7 @@ int main(int argc, FAR char *argv[])
 
 errout:
   close(st->fd_fb);
-  dprintf(STDERR_FILENO, "FBCON exiting with error %d\n", exitcode);
+  fprintf(stderr, "FBCON exiting with error %d\n", exitcode);
   return exitcode;
 }
 

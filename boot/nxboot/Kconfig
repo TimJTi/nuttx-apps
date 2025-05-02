@@ -53,11 +53,11 @@ config NXBOOT_PLATFORM_IDENTIFIER
 		value in image's header doesn't match this option.
 
 config NXBOOT_PRINT_STDOUT
-    bool "Enable the printing of syslog LOG_INFO messages to stdout"
+	bool "Enable the printing of syslog LOG_INFO messages to stdout"
 	default n
 
 config NXBOOT_PRINT_STDERR
-    bool "Enable the printing of syslog messages above LOG_INFO to stderr"
+	bool "Enable the printing of syslog messages above LOG_INFO to stderr"
 	default n
 
 config NXBOOT_BOOTLOADER
@@ -72,12 +72,16 @@ config NXBOOT_BOOTLOADER
 
 if NXBOOT_BOOTLOADER
 
-config NXBOOT_USE_EXT_ERROR_FN
-    bool "If boot fails, call an out-of-tree error handler"
-    default n
-    ---help---
-      This must be a compiled C source file, and compiled as part of the build.
-      Typically this would be a source file of an out-of-tree custom board.
+config NXBOOT_COPY_TO_RAM
+	bool "Copy bootable image to RAM before calling board boot-image function"
+	default n
+
+config NXBOOT_RAMSTART
+	hex "Start address in RAM that the application is to be loaded"
+	default 0x0
+	depends on NXBOOT_COPY_TO_RAM
+	---help---
+		This will be board specific
 
 config NXBOOT_SWRESET_ONLY
 	bool "Perform update/revert only on SW reset"
@@ -106,6 +110,10 @@ config NXBOOT_PREVENT_DOWNGRADE
 
 		WARNING: NXboot currently implements preferences only for
 		MAJOR.MINOR.PATCH and ignores prerelease.
+
+config NXBOOT_PRINTF_PROGRESS
+	bool "Enable progress messages to be sent to STDOUT"
+	default n
 
 endif # NXBOOT_BOOTLOADER
 
