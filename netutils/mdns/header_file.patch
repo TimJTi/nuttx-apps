@@ -1,0 +1,13 @@
+--- mdns/mdns.c
++++ mdns/mdns.c
+@@ -25,7 +25,7 @@
+ #define printf
+ #endif
+ 
+-#include "mdns.h"
++#include <netutils/mdns.h>
+ 
+ #if defined(MDNS_FUZZING)
+ #undef recvfrom
+ -- 
+2.34.1

@@ -1,0 +1,44 @@
+config LIB_MDNS
+	bool "Enable mDNS library"
+	default n
+	---help---
+		Enable the mDNS library. This allows calls to the library to be made.
+		
+		This external library is "unlicensed" using the methodology from http://unlicense.org.
+		You should be sure that this license is acceptable for your usage.
+
+if LIB_MDNS
+
+config NETUTILS_MDNS
+	tristate "Enable mdns tools (demo app)"
+	default n
+	---help---
+		Enable the built-in MDNS demo app. This allows the functionality of the library
+                to be demonstrated. Information on using it is available from the original git
+                repo for this external library:
+                
+                https://github.com/mjansson/mdns
+                
+if NETUTILS_MDNS
+
+config NETUTILS_MDNS_PROGNAME
+        string "mDNS program name"
+        default "mdns"
+        ---help---
+                This is the name of the program that will be used when the NSH ELF
+                program is installed.
+
+config NETUTILS_MDNS_PRIORITY
+        int "mDNS task priority"
+        default 100
+
+config NETUTILS_MDNS_STACKSIZE
+        int "mDNS stack size"
+        default DEFAULT_TASK_STACKSIZE
+        ---help---
+                The default (4KiB) is adequate for simple networks but this will
+                most likely need to be increased if there are many network devices
+                attached that could send queries.
+
+endif
+endif
