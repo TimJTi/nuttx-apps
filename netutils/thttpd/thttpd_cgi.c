@@ -634,12 +634,11 @@ static inline int cgi_interpose_output(struct cgi_conn_s *cc)
 
           snprintf(cc->inbuf.buffer, CONFIG_THTTPD_CGIINBUFFERSIZE,
                    "HTTP/1.0 %d %s\r\n", status, title);
-          httpd_write(cc->connfd, cc->inbuf.buffer,
-                      strlen(cc->inbuf.buffer));
+          send(cc->connfd, cc->inbuf.buffer, strlen(cc->inbuf.buffer), 0);
 
           /* Write the saved cc->outbuf.buffer to the client. */
 
-          httpd_write(cc->connfd, cc->outbuf.buffer, cc->outbuf.len);
+          send(cc->connfd, cc->outbuf.buffer, cc->outbuf.len, 0);
         }
 
         /* Then set up to read the data following the header from the CGI
@@ -731,6 +730,7 @@ static int cgi_child(int argc, char **argv)
   int        fd;
   int        ret;
   int        errcode = 1;
+
 
   /* Use low-level debug out (because the low-level output may survive
    * closing all file descriptors
@@ -886,6 +886,7 @@ static int cgi_child(int argc, char **argv)
 #ifdef CONFIG_THTTPD_NXFLAT
   child = exec(hc->expnfilename, argp, NULL,
                g_thttpdsymtab, g_thttpdnsymbols);
+
 #else
   child = exec(hc->expnfilename, argp, NULL, NULL, 0);
 #endif
@@ -893,7 +894,7 @@ static int cgi_child(int argc, char **argv)
     {
       /* Something went wrong. */
 
-      nerr("ERROR: execve %s: %d\n", hc->expnfilename, errno);
+      nerr("ERROR: exec %s: %d\n", hc->expnfilename, errno);
       goto errout_with_watch;
     }
 
