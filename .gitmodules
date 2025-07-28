@@ -1,0 +1,3 @@
+[submodule "MyApps"]
+	path = MyApps
+	url = ./MyApps
