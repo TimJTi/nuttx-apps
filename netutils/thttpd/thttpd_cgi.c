@@ -63,6 +63,7 @@
 #include "thttpd_alloc.h"
 #include "thttpd_strings.h"
 #include "fdwatch.h"
+#include "thttpd_cgi.h"
 
 #if defined(CONFIG_THTTPD) && defined(CONFIG_THTTPD_CGI_PATTERN)
 
@@ -1096,7 +1097,7 @@ errout_with_sem:
 }
 
 #if CONFIG_THTTPD_CGI_TIMELIMIT > 0
-static void cgi_kill(clientdata client_data, struct timeval *nowp)
+void cgi_kill(clientdata client_data, struct timeval *nowp)
 {
   pid_t pid = (pid_t)client_data.i;
 
