@@ -214,6 +214,21 @@ void nxboot_progress(enum progress_type_e type, ...)
         }
       break;
 #endif
+      case nxboot_progress_result:      
+        {
+          assert(g_progress_started);
+          if (!g_progress_started)
+            {
+              syslog(LOG_ERR, "Progress result requested "
+                              "but no previous progress start\n");
+            }
+          else
+            {
+              bool success = va_arg(arg, int);
+              dprintf(STDOUT_FILENO, success ? " passed" : "failed");
+            }
+        }
+      break;
       case nxboot_progress_end:
         {
           assert(g_progress_started);

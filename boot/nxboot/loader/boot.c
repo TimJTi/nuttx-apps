@@ -301,6 +301,7 @@ static enum nxboot_update_type
 {
   nxboot_progress(nxboot_progress_start, validate_primary);
   bool primary_valid = validate_image(primary);
+  nxboot_progress(nxboot_progress_result, primary_valid);
   nxboot_progress(nxboot_progress_end);
 
   nxboot_progress(nxboot_progress_start, validate_update);
@@ -310,12 +311,14 @@ static enum nxboot_update_type
           !compare_versions(&primary_header->img_version,
           &update_header->img_version) || !primary_valid)
         {
+          nxboot_progress(nxboot_progress_result, primary_valid);
           nxboot_progress(nxboot_progress_end);
           return NXBOOT_UPDATE_TYPE_UPDATE;
         }
     }
 
-  nxboot_progress(nxboot_progress_end);
+    nxboot_progress(nxboot_progress_result, primary_valid);
+    nxboot_progress(nxboot_progress_end);
 
   if (IS_INTERNAL_MAGIC(recovery_header->magic) && state->recovery_valid &&
       ((IS_INTERNAL_MAGIC(primary_header->magic) &&
@@ -373,6 +376,8 @@ static int perform_update(struct nxboot_state *state, bool check_only)
   if (state->next_boot == NXBOOT_UPDATE_TYPE_REVERT &&
       (!check_only || !validate_image(primary)))
     {
+      primary_valid = validate_image(primary);
+      nxboot_progress(nxboot_progress_result, primary_valid);
       nxboot_progress(nxboot_progress_end);
       if (state->recovery_valid)
         {
@@ -387,6 +392,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
       nxboot_progress(nxboot_progress_end);
       nxboot_progress(nxboot_progress_start, validate_primary);
       primary_valid = validate_image(primary);
+      nxboot_progress(nxboot_progress_result, primary_valid);
       nxboot_progress(nxboot_progress_end);
       if (primary_valid && check_only)
         {
@@ -418,6 +424,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
           nxboot_progress(nxboot_progress_end);
           nxboot_progress(nxboot_progress_start, validate_recovery);
           successful = validate_image(recovery);
+          nxboot_progress(nxboot_progress_result, successful);
           nxboot_progress(nxboot_progress_end);
           if (!successful)
             {
@@ -433,6 +440,7 @@ static int perform_update(struct nxboot_state *state, bool check_only)
 
       nxboot_progress(nxboot_progress_start, validate_update);
       successful = validate_image(update);
+      nxboot_progress(nxboot_progress_result, successful);
       nxboot_progress(nxboot_progress_end);
       if (successful)
         {
@@ -449,6 +457,11 @@ static int perform_update(struct nxboot_state *state, bool check_only)
                */
 
               flash_partition_erase_first_sector(update);
+              nxboot_progress(nxboot_progress_result, true);
+            }
+          else
+            {
+              nxboot_progress(nxboot_progress_result, false);
             }
 
           nxboot_progress(nxboot_progress_end);
@@ -629,6 +642,7 @@ int nxboot_get_state(struct nxboot_state *state)
 
   nxboot_progress(nxboot_progress_start, validate_recovery);
   state->recovery_valid = validate_image(recovery);
+  nxboot_progress(nxboot_progress_result, state->recovery_valid);
   nxboot_progress(nxboot_progress_end);
   state->recovery_present = primary_header.crc == recovery_header->crc;
 

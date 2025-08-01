@@ -141,6 +141,7 @@ enum progress_type_e
   nxboot_progress_start,   /* Prints arg. string with no newline to allow ..... sequence to follow */
   nxboot_progress_dot,     /* Prints of a "." to the ..... progress sequence */
   nxboot_progress_percent, /* Displays progress as % remaining */
+  nxboot_progress_result,  /* Append result of the progressed function to the progress */
   nxboot_progress_end,     /* Flags end of a "..." progrees sequence and prints newline */
 };
 
@@ -159,6 +160,7 @@ enum progress_msg_e
   validate_primary,
   validate_recovery,
   validate_update,
+  progress_result,
   recovery_created,
   recovery_invalid,
   update_failed,
